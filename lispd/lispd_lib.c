@@ -202,13 +202,13 @@ int get_afi(str)
  *      if supplied
  */
 
-int copy_lisp_addr_t(a1,a2,afi,convert)
+int copy_lisp_addr_t(a1,a2,convert)
      lisp_addr_t *a1;
      lisp_addr_t *a2;
-     uint16_t     afi;
      int          convert;
 {
-    switch(afi) {
+    a1->afi = a2->afi;
+    switch(a2->afi) {
     case AF_INET:
         if (convert)
             a1->address.ip.s_addr = htonl(a2->address.ip.s_addr);
@@ -216,13 +216,13 @@ int copy_lisp_addr_t(a1,a2,afi,convert)
             a1->address.ip.s_addr = a2->address.ip.s_addr;
         break;
     case AF_INET6:
-            memcpy(a1->address.ipv6.s6_addr,
-                   a2->address.ipv6.s6_addr,
-                   sizeof(struct in6_addr));
-            break;
-        default:
-            syslog(LOG_DAEMON, "copy_lisp_addr_t: Unknown AFI (%d)", afi);
-            return(0);
+        memcpy(a1->address.ipv6.s6_addr,
+               a2->address.ipv6.s6_addr,
+               sizeof(struct in6_addr));
+        break;
+    default:
+        syslog(LOG_DAEMON, "copy_lisp_addr_t: Unknown AFI (%d)", a2->afi);
+        return(0);
     }
     return(1);
 }
@@ -324,12 +324,12 @@ lispd_addr_t *get_my_addr(if_name, afi)
 /*
  *      lispd_get_address
  *
- *      return lispd_addr_t for host/FQDN or 0 if none
+ *      return lisp_addr_t for host/FQDN or 0 if none
  */
 
-lispd_addr_t *lispd_get_address(host, addr, flags)
+lisp_addr_t *lispd_get_address(host, addr, flags)
     char             *host;
-    lispd_addr_t     *addr;
+    lisp_addr_t      *addr;
     unsigned int     *flags;
 {
     struct hostent      *hptr;
@@ -338,7 +338,7 @@ lispd_addr_t *lispd_get_address(host, addr, flags)
      * make sure this is clean
      */
 
-    memset((void *) &(addr->address), 0, sizeof(lisp_addr_t));
+    memset(&addr, 0, sizeof(lisp_addr_t));
 
     /*
      *  check to see if hhost is either a FQDN of IPvX address.
@@ -346,7 +346,7 @@ lispd_addr_t *lispd_get_address(host, addr, flags)
 
     if (((hptr = gethostbyname2(host,AF_INET))  != NULL) ||
         ((hptr = gethostbyname2(host,AF_INET6)) != NULL)) {
-        memcpy((void *) &(addr->address.address),
+        memcpy((void *) &(addr->address),
                (void *) *(hptr->h_addr_list), sizeof(lisp_addr_t));
         addr->afi = hptr->h_addrtype;
         if (isfqdn(host))
@@ -364,9 +364,9 @@ lispd_addr_t *lispd_get_address(host, addr, flags)
  *  return lispd_addr_t for the interface, 0 if none
  */
 
-lispd_addr_t *lispd_get_iface_address(ifacename, addr)
-        char             *ifacename;
-        lispd_addr_t     *addr;
+lisp_addr_t *lispd_get_iface_address(ifacename, addr)
+    char                *ifacename;
+    lisp_addr_t         *addr;
 {
     struct ifaddrs      *ifaddr;
     struct ifaddrs      *ifa;
@@ -378,7 +378,7 @@ lispd_addr_t *lispd_get_iface_address(ifacename, addr)
      * make sure this is clean
      */
 
-    memset((void *) &(addr->address), 0, sizeof(lisp_addr_t));
+    memset(&addr, 0, sizeof(lisp_addr_t));
 
     /*
      *  go search for the interface
@@ -397,7 +397,7 @@ lispd_addr_t *lispd_get_iface_address(ifacename, addr)
         case AF_INET:
             s4 = (struct sockaddr_in *)(ifa->ifa_addr);
             if (!strcmp(ifa->ifa_name, ifacename)) {
-                memcpy((void *) &(addr->address.address),
+                memcpy((void *) &(addr->address),
                        (void *)&(s4->sin_addr), sizeof(struct in_addr));
                 addr->afi = AF_INET;
                 syslog(LOG_DAEMON, "MN's IPv4 RLOC from interface (%s): %s \n",
@@ -412,7 +412,7 @@ lispd_addr_t *lispd_get_iface_address(ifacename, addr)
         case AF_INET6:
             s6 = (struct sockaddr_in6 *)(ifa->ifa_addr);
             if (!strcmp(ifa->ifa_name, ifacename)) {
-                memcpy((void *) &(addr->address.address),
+                memcpy((void *) &(addr->address),
                        (void *)&(s6->sin6_addr),
                        sizeof(struct in6_addr));
                 addr->afi = AF_INET6;
