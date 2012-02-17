@@ -84,7 +84,6 @@ int map_register(tree)
         } else if (ms->verify) {
             if (!build_and_send_map_request_msg(ms->address,
                             &(locator_chain->eid_prefix),
-                            locator_chain->eid_prefix_afi,
                             locator_chain->eid_prefix_length,
                             1,1,0,0,0,0,0,LISPD_INITIAL_MRQ_TIMEOUT,1))
 

@@ -546,12 +546,11 @@ int send_map_request(packet, packet_len, resolver)
  *
  */
 
-int build_and_send_map_request_msg(dest, eid_prefix, eid_prefix_afi,
+int build_and_send_map_request_msg(dest, eid_prefix,
         eid_prefix_length, eid_name, encap, probe, solicit_map_request,
         smr_invoked, islocal,retries,timeout,search)
     lispd_addr_t *dest;
     lisp_addr_t *eid_prefix;
-    uint16_t eid_prefix_afi;
     uint8_t eid_prefix_length;
     char *eid_name;
     uint8_t encap;                  /* "boolean" */
@@ -644,7 +643,6 @@ int process_map_request_msg(uint8_t *packet, int s, struct sockaddr *from, int a
     lisp_addr_t itr_rloc[32];
     prefix_t eid_prefix;
     int itr_rloc_count = 0;
-    int src_eid_afi;
     int itr_rloc_afi;
     void *cur_ptr;
     int afi_len = 0;
@@ -760,7 +758,7 @@ int process_map_request_msg(uint8_t *packet, int s, struct sockaddr *from, int a
 
         if (msg->solicit_map_request) {
             if(!build_and_send_map_request_msg(map_resolvers->address,
-                        src_eid_prefix, src_eid_afi, afi_len, eid_name,
+                        src_eid_prefix, afi_len, eid_name,
                         1, 0, 0, 1, 0, 0, LISPD_INITIAL_MRQ_TIMEOUT, 0)) {
                 syslog(LOG_DAEMON, "process_map_request_msg: couldn't build/send SMR triggered Map-Request");
                 return(0);

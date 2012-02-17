@@ -135,7 +135,7 @@ int process_map_reply(packet)
      */
     if (mrp->rloc_probe) {
         syslog(LOG_DAEMON, "  RLOC probe reply, setting locator status UP");
-        update_map_cache_entry_rloc_status(&elt->eid_prefix, elt->eid_prefix_afi,
+        update_map_cache_entry_rloc_status(&elt->eid_prefix,
                 elt->eid_prefix_length, &elt->dest, 1);
         delete_datacache_entry(elt);
         return 0;

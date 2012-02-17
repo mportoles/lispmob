@@ -1013,7 +1013,6 @@ void smr_pitrs(void) {
                 inet_ntop(elt->address->afi, &(elt->address->address.address), pitr_name, 128);
                 if (build_and_send_map_request_msg(elt->address,
                         &(locator_chain->eid_prefix),
-                        locator_chain->eid_prefix_afi,
                         (get_addr_len(locator_chain->eid_prefix_afi) * 8),
                         locator_chain->eid_name,
                         0, 0, 1, 0, 0, 0, LISPD_INITIAL_MRQ_TIMEOUT, 0))

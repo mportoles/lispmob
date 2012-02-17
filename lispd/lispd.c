@@ -423,7 +423,7 @@ void callback_elt(elt)
 #ifdef  DEBUG
             syslog(LOG_INFO, "Expired RLOC probe, setting locator status DOWN");
 #endif
-            update_map_cache_entry_rloc_status(&elt->eid_prefix, elt->eid_prefix.afi,
+            update_map_cache_entry_rloc_status(&elt->eid_prefix,
                     elt->eid_prefix_length, &elt->dest, 0);
             delete_datacache_entry(elt);
             return;
@@ -453,7 +453,6 @@ void callback_elt(elt)
 
     build_and_send_map_request_msg(&elt->dest,
                                     &elt->eid_prefix,
-                                    elt->eid_prefix.afi,
                                     elt->eid_prefix_length,
                                     eid_name,
                                     elt->encap,
