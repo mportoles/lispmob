@@ -620,7 +620,7 @@ int build_and_send_map_request_msg(dest, eid_prefix, eid_prefix_afi,
      */
 
     if (!solicit_map_request) {
-        if (!build_datacache_entry(dest, eid_prefix, eid_prefix_afi, eid_prefix_length,
+        if (!build_datacache_entry(dest, eid_prefix, eid_prefix_length,
                     nonce, islocal, probe, smr_invoked, retries, timeout, encap)) {
             syslog(LOG_DAEMON, "Couldn't build datacache_entry");
             return (0);

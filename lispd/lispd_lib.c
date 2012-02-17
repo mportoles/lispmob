@@ -266,24 +266,24 @@ int copy_addr(a1,a2,afi,convert)
  *      find a useable source address with AFI = afi
  */
  
-/* TODO (LJ): To avoid memory leaks, the lispd_addr_t should be allocated
+/* TODO (LJ): To avoid memory leaks, the lisp_addr_t should be allocated
  *            by caller and a pointer passed as parameter. Update calls! */
-lispd_addr_t *get_my_addr(if_name, afi)
+lisp_addr_t *get_my_addr(if_name, afi)
      char       *if_name;
      int        afi;
 {
-    lispd_addr_t        *addr;    
+    lisp_addr_t         *addr;
     struct ifaddrs      *ifaddr;
     struct ifaddrs      *ifa;
     struct sockaddr_in  *s4;
     struct sockaddr_in6 *s6;
 
-    if ((addr = malloc(sizeof(lispd_addr_t))) == NULL) {
+    if ((addr = malloc(sizeof(lisp_addr_t))) == NULL) {
         syslog(LOG_DAEMON, "malloc (get_my_addr): %s", strerror(errno));
         return(0);
     }
 
-    memset(addr,0,sizeof(lispd_addr_t));
+    memset(addr,0,sizeof(lisp_addr_t));
 
     if (getifaddrs(&ifaddr) !=0) {
         syslog(LOG_DAEMON, "getifaddrs(get_my_addr): %s", strerror(errno));
@@ -300,14 +300,14 @@ lispd_addr_t *get_my_addr(if_name, afi)
         switch(ifa->ifa_addr->sa_family) {
         case AF_INET:
             s4 = (struct sockaddr_in *)(ifa->ifa_addr);
-            memcpy((void *) &(addr->address.address),
+            memcpy((void *) &(addr->address),
                    (void *)&(s4->sin_addr), sizeof(struct in_addr));
             addr->afi = (ifa->ifa_addr)->sa_family;
             freeifaddrs(ifaddr);
             return(addr);
         case AF_INET6:
             s6 = (struct sockaddr_in6 *)(ifa->ifa_addr);
-            memcpy((void *) &(addr->address.address),
+            memcpy((void *) &(addr->address),
                    (void *)&(s6->sin6_addr), sizeof(struct in6_addr));
             addr->afi = (ifa->ifa_addr)->sa_family;
             freeifaddrs(ifaddr);
@@ -361,7 +361,7 @@ lisp_addr_t *lispd_get_address(host, addr, flags)
 /*
  *  lispd_get_iface_address
  *
- *  return lispd_addr_t for the interface, 0 if none
+ *  return lisp_addr_t for the interface, 0 if none
  */
 
 lisp_addr_t *lispd_get_iface_address(ifacename, addr)
@@ -454,12 +454,12 @@ void dump_database_entry(db_entry)
     char             rloc[128];
     char             buf[128];
 
-    afi = db_entry->eid_prefix_afi;
+    afi = db_entry->eid_prefix.afi;
     inet_ntop(afi,
               &(db_entry->eid_prefix.address),
               eid,
               128);
-    inet_ntop(db_entry->locator_afi,
+    inet_ntop(db_entry->locator.afi,
               &(db_entry->locator.address),
               rloc, 128);
     sprintf(buf, "%s (%s)", db_entry->locator_name, rloc);
@@ -511,7 +511,7 @@ void dump_servers(list, list_name)
     lispd_addr_list_t   *list;
     const char          *list_name;
 { 
-    lispd_addr_t        *addr     = 0;
+    lisp_addr_t         *addr     = 0;
     lispd_addr_list_t   *iterator = 0;
     int                 afi; 
     char                buf[128];
@@ -525,7 +525,7 @@ void dump_servers(list, list_name)
     while (iterator) {
         addr = iterator->address;
         afi = addr->afi;
-        inet_ntop(afi, &(addr->address.address), buf, sizeof(buf));
+        inet_ntop(afi, &(addr->address), buf, sizeof(buf));
         syslog(LOG_DAEMON," %s", buf);
         iterator = iterator->next;
     }
@@ -535,12 +535,12 @@ void dump_map_server(ms)
     lispd_map_server_list_t *ms;
 {
     int                     afi;
-    lispd_addr_t            *addr;
+    lisp_addr_t             *addr;
     char                    buf[128];
 
     addr = ms->address;
     afi = addr->afi;
-    inet_ntop(afi, &(addr->address.address), buf, sizeof(buf));
+    inet_ntop(afi, &(addr->address), buf, sizeof(buf));
     syslog(LOG_DAEMON, " %s key-type: %d key: %s",
        buf,
        ms->key_type,
@@ -580,13 +580,13 @@ void dump_map_cache(void)
 
     while (map_cache) {
         map_cache_entry = &(map_cache->map_cache_entry);
-        afi = map_cache_entry->eid_prefix_afi;
+        afi = map_cache_entry->eid_prefix.afi;
         ttl = map_cache_entry->ttl;
         inet_ntop(afi,
                   &(map_cache_entry->eid_prefix.address),
                   eid,
                   128);
-        inet_ntop(map_cache_entry->locator_afi,
+        inet_ntop(map_cache_entry->locator.afi,
                   &(map_cache_entry->locator.address),
                   rloc, 128);
         syslog(LOG_DAEMON," %s lisp %s/%d %s p %d w %d ttl %d (%s)",
@@ -681,7 +681,7 @@ void debug_installed_database_entry(db_entry, locator_chain)
     char        buf[128];
     char        rloc[128];
 
-    inet_ntop(db_entry->locator_afi,
+    inet_ntop(db_entry->locator.afi,
               &(db_entry->locator.address),
               rloc, 128);
 
@@ -690,7 +690,7 @@ void debug_installed_database_entry(db_entry, locator_chain)
     else
         sprintf(buf, "%s (%s)", db_entry->locator_name, rloc);
     syslog(LOG_DAEMON, "  Installed %s lisp %s %s p %d w %d",
-       (locator_chain->eid_prefix_afi == AF_INET) ? "ip":"ipv6",
+       (locator_chain->eid_prefix.afi == AF_INET) ? "ip":"ipv6",
        locator_chain->eid_name,
        buf,
        db_entry->priority,
@@ -832,7 +832,7 @@ int get_prefix_len(afi)
 
 struct udphdr *build_ip_header(cur_ptr,my_addr,eid_prefix, ip_len)
         void                  *cur_ptr;
-        lispd_addr_t          *my_addr;
+        lisp_addr_t           *my_addr;
         lisp_addr_t           *eid_prefix;
         int                   ip_len;
 {
@@ -852,7 +852,7 @@ struct udphdr *build_ip_header(cur_ptr,my_addr,eid_prefix, ip_len)
         iph->ip_ttl        = 255;
         iph->ip_p          = IPPROTO_UDP;
         iph->ip_sum        = 0;         
-        iph->ip_src.s_addr = my_addr->address.address.ip.s_addr;
+        iph->ip_src.s_addr = my_addr->address.ip.s_addr;
         iph->ip_dst.s_addr = eid_prefix->address.ip.s_addr; 
         udph              = (struct udphdr *) CO(iph,sizeof(struct ip));
         break;
@@ -863,7 +863,7 @@ struct udphdr *build_ip_header(cur_ptr,my_addr,eid_prefix, ip_len)
         ip6h->ip6_nxt  = IPPROTO_UDP;
         ip6h->ip6_plen = htons(ip_len);
         memcpy(ip6h->ip6_src.s6_addr,
-               my_addr->address.address.ipv6.s6_addr,
+               my_addr->address.ipv6.s6_addr,
                sizeof(struct in6_addr));
         memcpy(ip6h->ip6_dst.s6_addr,
                eid_prefix->address.ipv6.s6_addr,
@@ -936,7 +936,6 @@ void lispd_print_nonce (nonce)
 
 int build_datacache_entry(dest,
                         eid_prefix,
-                       eid_prefix_afi,
                        eid_prefix_length,
                        nonce,
                        islocal,
@@ -945,9 +944,8 @@ int build_datacache_entry(dest,
                        retries,
                        timeout,
                        encap)
-     lispd_addr_t *dest;
-     lisp_addr_t *eid_prefix;
-     uint16_t     eid_prefix_afi;
+     lisp_addr_t  *dest;
+     lisp_addr_t  *eid_prefix;
      uint8_t      eid_prefix_length;
      uint64_t     nonce;
      uint8_t      islocal;
@@ -973,18 +971,18 @@ int build_datacache_entry(dest,
     elt->nonce             = nonce;
     elt->local             = islocal;
     elt->ttl               = DEFAULT_DATA_CACHE_TTL;
-    if (eid_prefix_afi == AF_INET) {
+    if (eid_prefix->afi == AF_INET) {
     memcpy((void*)&(elt->eid_prefix.address.ip),(void*)&(eid_prefix->address.ip),sizeof(struct sockaddr_in));
     }
-    else if (eid_prefix_afi == AF_INET6) {
+    else if (eid_prefix->afi == AF_INET6) {
     memcpy((void*)&(elt->eid_prefix.address.ipv6),(void*)&(eid_prefix->address.ipv6),sizeof(struct sockaddr_in6));
     }
     elt->dest.afi          = dest->afi;
     if (elt->dest.afi==AF_INET) {
-    memcpy((void*)&(elt->dest.address.address),(void*) &(dest->address.address),sizeof(struct sockaddr_in));
+    memcpy((void*)&(elt->dest.address),(void*) &(dest->address),sizeof(struct sockaddr_in));
     }
     else if (elt->dest.afi==AF_INET6) {
-    memcpy((void*)&(elt->dest.address.address),(void*) &(dest->address.address),sizeof(struct sockaddr_in6));
+    memcpy((void*)&(elt->dest.address),(void*) &(dest->address),sizeof(struct sockaddr_in6));
     }
     else {
     syslog(LOG_DAEMON,"Unknown AFI (build_datacache_entry): %d", elt->dest.afi);
@@ -992,9 +990,9 @@ int build_datacache_entry(dest,
     }
 
     elt->eid_prefix_length = eid_prefix_length;
-    elt->eid_prefix_afi    = eid_prefix_afi;
+    elt->eid_prefix.afi    = eid_prefix->afi;
     elt->probe             = probe;
-    elt->smr_invoked           = smr_invoked;
+    elt->smr_invoked       = smr_invoked;
     elt->retries           = retries;
     elt->encap             = encap;
     elt->timeout           = timeout;
@@ -1181,7 +1179,7 @@ int search_datacache_entry_eid (eid_afi,eid_prefix,res_elt)
     elt=datacache->head;
     while(elt!=NULL) {
         int res;
-        if ((eid_afi == AF_INET) && (eid_afi==elt->eid_prefix_afi)) {
+        if ((eid_afi == AF_INET) && (eid_afi==elt->eid_prefix.afi)) {
             if ((eid_prefix->address).ip.s_addr==(elt->eid_prefix).address.ip.s_addr) {
                 return 1;
             //res=memcmp((void*)&((eid_prefix->address).ip.s_addr),(void*)&((elt->eid_prefix).address.ip.s_addr),sizeof(struct sockaddr_in));
@@ -1191,7 +1189,7 @@ int search_datacache_entry_eid (eid_afi,eid_prefix,res_elt)
             }
 
         }
-        if ((eid_afi == AF_INET6) && (eid_afi==elt->eid_prefix_afi)) {
+        if ((eid_afi == AF_INET6) && (eid_afi==elt->eid_prefix.afi)) {
             res=memcmp((void*)&((eid_prefix->address).ipv6),(void*)&((elt->eid_prefix).address.ipv6),sizeof(struct sockaddr_in6));
             if (res==0) {
                 *res_elt=elt;
