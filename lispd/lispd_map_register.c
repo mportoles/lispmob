@@ -194,7 +194,6 @@ lispd_pkt_map_register_t *build_map_register_pkt (locator_chain)
     if ((len = copy_addr((void *)
              CO(mr,sizeof(lispd_pkt_mapping_record_t)),
              &(locator_chain->eid_prefix),
-             locator_chain->eid_prefix.afi,
              0)) == 0) {
     syslog(LOG_DAEMON, "eid prefix (%s) has an unknown afi (%d)",
            locator_chain->eid_name,
@@ -230,7 +229,6 @@ lispd_pkt_map_register_t *build_map_register_pkt (locator_chain)
                  CO(loc_ptr,
                 sizeof(lispd_pkt_mapping_record_locator_t)),
                  &(db_entry->locator),
-                 db_entry->locator.afi,
                  0)) == 0) {
         syslog(LOG_DAEMON, "locator (%s) has an unknown afi (%d)",
            db_entry->locator_name,

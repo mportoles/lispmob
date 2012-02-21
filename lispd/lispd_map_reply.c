@@ -281,7 +281,7 @@ void *build_mapping_record(rec, locator_chain, opts)
 
     if ((cpy_len = copy_addr((void *) CO(rec,
             sizeof(lispd_pkt_map_reply_eid_prefix_record_t)),
-            &(locator_chain->eid_prefix), locator_chain->eid_prefix_afi, 0)) == 0) {
+            &(locator_chain->eid_prefix), 0)) == 0) {
         syslog(LOG_DAEMON, "build_map_reply_pkt: copy_addr failed");
     }
 
@@ -303,8 +303,7 @@ void *build_mapping_record(rec, locator_chain, opts)
         loc_ptr->locator_afi = htons(get_lisp_afi(db_entry->locator_afi, NULL));
 
         if ((cpy_len = copy_addr((void *) CO(loc_ptr,
-                sizeof(lispd_pkt_map_reply_locator_t)), &(db_entry->locator),
-                db_entry->locator_afi, 0)) == 0) {
+                sizeof(lispd_pkt_map_reply_locator_t)), &(db_entry->locator), 0)) == 0) {
             syslog(LOG_DAEMON, "build_mapping_record: copy_addr failed for locator %s",
                     db_entry->locator_name);
             return(0);

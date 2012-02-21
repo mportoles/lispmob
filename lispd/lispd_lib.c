@@ -236,14 +236,13 @@ int copy_lisp_addr_t(a1,a2,convert)
  *      it convert != 0. Return the length or 0;
  */
 
-int copy_addr(a1,a2,afi,convert)
+int copy_addr(a1,a2,convert)
      void *a1;
      lisp_addr_t *a2;
-     int  afi;
      int convert;
 {
 
-    switch(afi) {
+    switch(a2->afi) {
     case AF_INET:
         if (convert)
             ((struct in_addr *) a1)->s_addr = htonl(a2->address.ip.s_addr);
@@ -256,7 +255,7 @@ int copy_addr(a1,a2,afi,convert)
                sizeof(struct in6_addr));
         return(sizeof(struct in6_addr));
     default:
-        syslog(LOG_DAEMON, "copy_addr: Unknown AFI (%d)", afi);
+        syslog(LOG_DAEMON, "copy_addr: Unknown AFI (%d)", a2->afi);
         return(0);
     }
 }
@@ -1147,9 +1146,8 @@ void delete_datacache_entry(elt)
 
 // Modified by acabello
 // Check if address is included into another address
-int is_eid_included(elt,eid_afi,eid_prefix_mask_length,eid)
+int is_eid_included(elt, eid_prefix_mask_length, eid)
     datacache_elt_t* elt;
-    int eid_afi;
     int eid_prefix_mask_length;
     lisp_addr_t *eid;
 {
@@ -1159,8 +1157,7 @@ int is_eid_included(elt,eid_afi,eid_prefix_mask_length,eid)
 
 // Modified by acabello
 // Search a datacache entry based on EID prefix and returns it in res_elt
-int search_datacache_entry_eid (eid_afi,eid_prefix,res_elt)
-    uint16_t eid_afi;
+int search_datacache_entry_eid(eid_prefix, res_elt)
     lisp_addr_t* eid_prefix;
     datacache_elt_t **res_elt;
 {
@@ -1179,7 +1176,7 @@ int search_datacache_entry_eid (eid_afi,eid_prefix,res_elt)
     elt=datacache->head;
     while(elt!=NULL) {
         int res;
-        if ((eid_afi == AF_INET) && (eid_afi==elt->eid_prefix.afi)) {
+        if ((eid_prefix->afi == AF_INET) && (eid_prefix->afi==elt->eid_prefix.afi)) {
             if ((eid_prefix->address).ip.s_addr==(elt->eid_prefix).address.ip.s_addr) {
                 return 1;
             //res=memcmp((void*)&((eid_prefix->address).ip.s_addr),(void*)&((elt->eid_prefix).address.ip.s_addr),sizeof(struct sockaddr_in));
@@ -1189,7 +1186,7 @@ int search_datacache_entry_eid (eid_afi,eid_prefix,res_elt)
             }
 
         }
-        if ((eid_afi == AF_INET6) && (eid_afi==elt->eid_prefix.afi)) {
+        if ((eid_prefix->afi == AF_INET6) && (eid_prefix->afi==elt->eid_prefix.afi)) {
             res=memcmp((void*)&((eid_prefix->address).ipv6),(void*)&((elt->eid_prefix).address.ipv6),sizeof(struct sockaddr_in6));
             if (res==0) {
                 *res_elt=elt;
