@@ -105,7 +105,6 @@ uint8_t *build_map_request_pkt(dest, eid_prefix, eid_prefix_length,
 
     struct udphdr                               *udph;
     lisp_addr_t                                 *my_addr;
-    lisp_addr_t                                 rloc;
     uint8_t                                     *packet;
     lispd_pkt_map_request_t                     *mrp;
     lispd_pkt_encapsulated_control_t            *ecm;
@@ -313,8 +312,7 @@ else
 		return (0);
         }
     } else {
-        lispd2lisp(dest, &rloc);
-	if ((udph = build_ip_header(iphptr, my_addr, &rloc, ip_len)) == 0) {
+	if ((udph = build_ip_header(iphptr, my_addr, dest, ip_len)) == 0) {
 		syslog(LOG_DAEMON, "Can't build IP header (unknown AFI %d)",
 	                my_addr->afi);
 	        free(my_addr);
@@ -654,7 +652,6 @@ int process_map_request_msg(uint8_t *packet, int s, struct sockaddr *from, int a
     uint16_t udpsum = 0;
     uint16_t ipsum = 0;
     int udp_len = 0;
-    lisp_addr_t my_rloc;
     map_reply_opts opts;
     int i;
 
@@ -767,11 +764,6 @@ int process_map_request_msg(uint8_t *packet, int s, struct sockaddr *from, int a
         }
     }
 
-    if(lispd2lisp(&source_rloc, &my_rloc) < 0) {
-        syslog(LOG_DAEMON, "process_map_request_msg: lispd2lisp failed");
-        return(0);
-    }
-
     /* Get the array of ITR-RLOCs */
     itr_rloc_count = msg->additional_itr_rloc_count + 1;
     for (i = 0; i < itr_rloc_count; i++) {
@@ -809,7 +801,7 @@ int process_map_request_msg(uint8_t *packet, int s, struct sockaddr *from, int a
 
     if (msg->rloc_probe) {
         opts.rloc_probe = 1;
-        if(!build_and_send_map_reply_msg(&my_rloc, NULL, 0,
+        if(!build_and_send_map_reply_msg(&source_rloc, NULL, 0,
                     from, s, eid_prefix, msg->nonce, opts)) {
             syslog(LOG_DAEMON, "process_map_request_msg: couldn't build/send RLOC-probe reply");
             return(0);
@@ -818,7 +810,7 @@ int process_map_request_msg(uint8_t *packet, int s, struct sockaddr *from, int a
         return(1);
     }
 
-    if(!build_and_send_map_reply_msg(&my_rloc, &(itr_rloc[0]), sport,
+    if(!build_and_send_map_reply_msg(&source_rloc, &(itr_rloc[0]), sport,
                 NULL, 0, eid_prefix, msg->nonce, opts)) {
         syslog(LOG_DAEMON, "process_map_request_msg: couldn't build/send map-reply");
         return(0);
