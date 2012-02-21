@@ -248,7 +248,7 @@ int get_record_length(lispd_locator_chain_t *locator_chain) {
 
     locator_chain_elt = locator_chain->head;
     loc_len = get_locator_length(locator_chain_elt);
-    get_lisp_afi(locator_chain->eid_prefix_afi, &afi_len);
+    get_lisp_afi(locator_chain->eid_prefix.afi, &afi_len);
 
     return sizeof(lispd_pkt_map_reply_eid_prefix_record_t) + afi_len +
            (locator_chain->locator_count * sizeof(lispd_pkt_map_reply_locator_t)) +
@@ -269,7 +269,7 @@ void *build_mapping_record(rec, locator_chain, opts)
     if ((rec == NULL) || (locator_chain == NULL))
         return NULL;
 
-    eid_afi = get_lisp_afi(locator_chain->eid_prefix_afi, NULL);
+    eid_afi = get_lisp_afi(locator_chain->eid_prefix.afi, NULL);
 
     rec->record_ttl             = htonl(DEFAULT_MAP_REGISTER_TIMEOUT);
     rec->locator_count          = locator_chain->locator_count;
@@ -300,7 +300,7 @@ void *build_mapping_record(rec, locator_chain, opts)
         if (opts.rloc_probe)
             loc_ptr->p       = 1;       /* XXX probed locator, should check addresses */
         loc_ptr->reachable   = 1;       /* XXX should be computed */
-        loc_ptr->locator_afi = htons(get_lisp_afi(db_entry->locator_afi, NULL));
+        loc_ptr->locator_afi = htons(get_lisp_afi(db_entry->locator.afi, NULL));
 
         if ((cpy_len = copy_addr((void *) CO(loc_ptr,
                 sizeof(lispd_pkt_map_reply_locator_t)), &(db_entry->locator), 0)) == 0) {
@@ -324,7 +324,6 @@ void *build_mapping_record(rec, locator_chain, opts)
 
 uint8_t *build_map_reply_pkt(lisp_addr_t *src, lisp_addr_t *dst, uint16_t dport,
         prefix_t eid_prefix, uint64_t nonce, map_reply_opts opts, int *len) {
-    lispd_addr_t source;
     uint8_t *packet;
     int packet_len = 0;
     int iph_len = 0;
@@ -374,8 +373,7 @@ uint8_t *build_map_reply_pkt(lisp_addr_t *src, lisp_addr_t *dst, uint16_t dport,
     }
     memset(packet, 0, packet_len);
 
-    lisp2lispd(src, &source);
-    udph = build_ip_header((void *)packet, &source, dst, iph_len);
+    udph = build_ip_header((void *)packet, src, dst, iph_len);
 
 #ifdef BSD
     udph->uh_sport = htons(LISP_CONTROL_PORT);
