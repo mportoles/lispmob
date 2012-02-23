@@ -282,7 +282,7 @@ lisp_addr_t *get_my_addr(if_name, afi)
         return(0);
     }
 
-    memset(addr,0,sizeof(lisp_addr_t));
+    memset(addr, 0, sizeof(lisp_addr_t));
 
     if (getifaddrs(&ifaddr) !=0) {
         syslog(LOG_DAEMON, "getifaddrs(get_my_addr): %s", strerror(errno));
@@ -377,7 +377,7 @@ lisp_addr_t *lispd_get_iface_address(ifacename, addr)
      * make sure this is clean
      */
 
-    memset(&addr, 0, sizeof(lisp_addr_t));
+    memset(addr, 0, sizeof(lisp_addr_t));
 
     /*
      *  go search for the interface
