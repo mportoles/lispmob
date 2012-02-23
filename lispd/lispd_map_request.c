@@ -595,7 +595,7 @@ int build_and_send_map_request_msg(dest, eid_prefix,
         }
     }
     else {
-        if (!inaddr2sockaddr(&dest, (struct sockaddr *)&rloc, LISP_CONTROL_PORT)) {
+        if (!inaddr2sockaddr(dest, (struct sockaddr *)&rloc, LISP_CONTROL_PORT)) {
             syslog(LOG_DAEMON, "inaddr2sockaddr: conversion failed");
             return(0);
         }
