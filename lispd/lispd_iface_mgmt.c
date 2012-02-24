@@ -494,7 +494,7 @@ static iface_list_elt *parse_nl_addr(nlHdr, addr)
                 syslog(LOG_DAEMON, "Interface address: %s\n", tempBuf);
                 switch (addr->afi) {
                     case AF_INET:
-                        memcpy(&(addr->address), 
+                        memcpy(&(addr->address),
                             (struct in_addr *)RTA_DATA(rtAttr),
                             sizeof(struct in_addr));
                         break;
